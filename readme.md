@@ -61,8 +61,7 @@ Run
 to
 
 1. Publish the .NET project into `dist`
-2. Provision resource group, storage account, and Function App (Flex Consumption)
-3. Configure managed identity and app settings
-4. Configure authentication (Entra ID)
-5. Publish app with `func azure functionapp publish`
+1. Provision Azure resources
+1. Publish app with `func azure functionapp publish`
 
+and update [wwwroot](./StaticFilesHandler/wwwroot/) with your html assets...

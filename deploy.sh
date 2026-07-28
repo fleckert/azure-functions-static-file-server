@@ -5,7 +5,7 @@ TENANT_ID=$(      az account show --query tenantId --output tsv --only-show-erro
 SUBSCRIPTION_ID=$(az account show --query id       --output tsv --only-show-errors)
 LOCATION="germanywestcentral"
 
-RG_NAME="testadfsd20260728"
+RG_NAME="test$(date +%s)"
 APP_NAME="$RG_NAME"
 STORAGE_NAME="$RG_NAME"
 
@@ -18,19 +18,19 @@ echo ''
 rm -rf dist
 
 dotnet publish StaticFilesHandler/StaticFilesHandler.csproj                                                                                          \
-  --configuration  Release                                                                                                                           \
-  --runtime        'linux-x64'                                                                                                                       \
-  --self-contained true                                                                                                                              \
-  --output         dist                                                                                                                              \
+  --configuration                   Release                                                                                                          \
+  --runtime                         'linux-x64'                                                                                                      \
+  --self-contained                  true                                                                                                             \
+  --output                          dist                                                                                                             \
   --property:OutputType=Exe                                                                                                                          \
   --property:PublishSingleFile=true
 
 # create semantics, no update
 if ! az functionapp show                                                                                                                             \
-       --subscription   "$SUBSCRIPTION_ID"                                                                                                           \
-       --resource-group "$RG_NAME"                                                                                                                   \
-       --name           "$APP_NAME"                                                                                                                  \
-       --output         none                                                                                                                         \
+       --subscription               "$SUBSCRIPTION_ID"                                                                                               \
+       --resource-group             "$RG_NAME"                                                                                                       \
+       --name                       "$APP_NAME"                                                                                                      \
+       --output                     none                                                                                                             \
        --only-show-errors 2>/dev/null; then
   
   echo ''
@@ -42,22 +42,22 @@ if ! az functionapp show                                                        
   ROLE_STORAGE_BLOB_DATA="Storage Blob Data Contributor"
   
   az group create                                                                                                                                    \
-    --subscription   "$SUBSCRIPTION_ID"                                                                                                              \
-    --name           "$RG_NAME"                                                                                                                      \
-    --location       "$LOCATION"                                                                                                                     \
-    --output         none                                                                                                                            \
+    --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
+    --name                          "$RG_NAME"                                                                                                       \
+    --location                      "$LOCATION"                                                                                                      \
+    --output                        none                                                                                                             \
     --only-show-errors
   
   az storage account create                                                                                                                          \
-    --subscription             "$SUBSCRIPTION_ID"                                                                                                    \
-    --resource-group           "$RG_NAME"                                                                                                            \
-    --location                 "$LOCATION"                                                                                                           \
-    --name                     "$STORAGE_NAME"                                                                                                       \
-    --sku                      "Standard_LRS"                                                                                                        \
-    --min-tls-version          TLS1_2                                                                                                                \
-    --allow-blob-public-access false                                                                                                                 \
-    --allow-shared-key-access  false                                                                                                                 \
-    --output                   none                                                                                                                  \
+    --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
+    --resource-group                "$RG_NAME"                                                                                                       \
+    --location                      "$LOCATION"                                                                                                      \
+    --name                          "$STORAGE_NAME"                                                                                                  \
+    --sku                           "Standard_LRS"                                                                                                   \
+    --min-tls-version               TLS1_2                                                                                                           \
+    --allow-blob-public-access      false                                                                                                            \
+    --allow-shared-key-access       false                                                                                                            \
+    --output                        none                                                                                                             \
     --only-show-errors
 
   az functionapp create                                                                                                                              \
@@ -77,65 +77,58 @@ if ! az functionapp show                                                        
     --only-show-errors
 
   az functionapp config appsettings delete                                                                                                           \
-    --subscription         "$SUBSCRIPTION_ID"                                                                                                        \
-    --resource-group       "$RG_NAME"                                                                                                                \
-    --name                 "$APP_NAME"                                                                                                               \
-    --setting-names        AzureWebJobsStorage                                                                                                       \
-    --output               none                                                                                                                      \
+    --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
+    --resource-group                "$RG_NAME"                                                                                                       \
+    --name                          "$APP_NAME"                                                                                                      \
+    --setting-names                 AzureWebJobsStorage                                                                                              \
+    --output                        none                                                                                                             \
+    --only-show-errors
+
+  az functionapp config appsettings set                                                                                                              \
+    --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
+    --resource-group                "$RG_NAME"                                                                                                       \
+    --name                          "$APP_NAME"                                                                                                      \
+    --settings                      AzureWebJobsStorage__accountName="$STORAGE_NAME"                                                                 \
+                                    AzureWebJobsStorage__credential=managedidentity                                                                  \
+    --output                        none                                                                                                             \
+    --only-show-errors
+
+  # func cli does not support tls1.3
+  az resource update                                                                                                                                 \
+    --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
+    --ids                           "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Web/sites/$APP_NAME/config/web"     \
+    --set                           properties.minTlsVersion=1.2                                                                                     \
+                                    properties.scmMinTlsVersion=1.2                                                                                  \
+                                    properties.healthCheckPath=/health                                                                               \
+    --output                        none                                                                                                             \
     --only-show-errors
 
   STORAGE_ACCOUNT_ID=$(                                                                                                                              \
     az storage account show                                                                                                                          \
-      --subscription   "$SUBSCRIPTION_ID"                                                                                                            \
-      --resource-group "$RG_NAME"                                                                                                                    \
-      --name           "$STORAGE_NAME"                                                                                                               \
-      --query          'id'                                                                                                                          \
-      --output         tsv                                                                                                                           \
+      --subscription                "$SUBSCRIPTION_ID"                                                                                               \
+      --resource-group              "$RG_NAME"                                                                                                       \
+      --name                        "$STORAGE_NAME"                                                                                                  \
+      --query                       'id'                                                                                                             \
+      --output                      tsv                                                                                                              \
       --only-show-errors                                                                                                                             \
   )
 
   FUNCTIONAPP_PRINCIPAL_ID=$(                                                                                                                        \
     az functionapp identity show                                                                                                                     \
-      --subscription   "$SUBSCRIPTION_ID"                                                                                                            \
-      --resource-group "$RG_NAME"                                                                                                                    \
-      --name           "$APP_NAME"                                                                                                                   \
-      --query          principalId                                                                                                                   \
-      --output         tsv                                                                                                                           \
+      --subscription                "$SUBSCRIPTION_ID"                                                                                               \
+      --resource-group              "$RG_NAME"                                                                                                       \
+      --name                        "$APP_NAME"                                                                                                      \
+      --query                       principalId                                                                                                      \
+      --output                      tsv                                                                                                              \
       --only-show-errors                                                                                                                             \
   )
 
   az role assignment create                                                                                                                          \
-    --assignee-principal-type ServicePrincipal                                                                                                       \
-    --role                    "$ROLE_STORAGE_BLOB_DATA"                                                                                              \
-    --assignee-object-id      "$FUNCTIONAPP_PRINCIPAL_ID"                                                                                            \
-    --scope                   "$STORAGE_ACCOUNT_ID"                                                                                                  \
-    --output                  none                                                                                                                   \
-    --only-show-errors
-
-  # func cli does not support tls1.3
-  az resource update                                                                                                                                 \
-    --subscription           "$SUBSCRIPTION_ID"                                                                                                      \
-    --ids                    "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Web/sites/$APP_NAME/config/web"            \
-    --set                    properties.minTlsVersion=1.2                                                                                            \
-                             properties.scmMinTlsVersion=1.2                                                                                         \
-    --output                 none                                                                                                                    \
-    --only-show-errors
-
-  az functionapp config appsettings set                                                                                                              \
-    --subscription   "$SUBSCRIPTION_ID"                                                                                                              \
-    --resource-group "$RG_NAME"                                                                                                                      \
-    --name           "$APP_NAME"                                                                                                                     \
-    --settings       AzureWebJobsStorage__accountName="$STORAGE_NAME"                                                                                \
-                     AzureWebJobsStorage__credential=managedidentity                                                                                 \
-    --output         none                                                                                                                            \
-    --only-show-errors
-
-  az webapp config set                                                                                                                               \
-    --subscription           "$SUBSCRIPTION_ID"                                                                                                      \
-    --resource-group         "$RG_NAME"                                                                                                              \
-    --name                   "$APP_NAME"                                                                                                             \
-    --generic-configurations '{"healthCheckPath":"/health"}'                                                                                         \
-    --output                 none                                                                                                                    \
+    --assignee-principal-type       ServicePrincipal                                                                                                 \
+    --role                          "$ROLE_STORAGE_BLOB_DATA"                                                                                        \
+    --assignee-object-id            "$FUNCTIONAPP_PRINCIPAL_ID"                                                                                      \
+    --scope                         "$STORAGE_ACCOUNT_ID"                                                                                            \
+    --output                        none                                                                                                             \
     --only-show-errors
 
   # Wait for role assignment to be visible (up to 5 minutes)
@@ -145,12 +138,12 @@ if ! az functionapp show                                                        
   while [ $ROLE_CHECK_ELAPSED -lt $ROLE_CHECK_TIMEOUT ]; do
     ROLE_COUNT=$(                                                                                                                                    \
       az role assignment list                                                                                                                        \
-        --subscription       "$SUBSCRIPTION_ID"                                                                                                      \
-        --assignee-object-id "$FUNCTIONAPP_PRINCIPAL_ID"                                                                                             \
-        --scope              "$STORAGE_ACCOUNT_ID"                                                                                                   \
-        --role               "$ROLE_STORAGE_BLOB_DATA"                                                                                               \
-        --query              "length(@)"                                                                                                             \
-        --output             tsv
+        --subscription              "$SUBSCRIPTION_ID"                                                                                               \
+        --assignee-object-id        "$FUNCTIONAPP_PRINCIPAL_ID"                                                                                      \
+        --scope                     "$STORAGE_ACCOUNT_ID"                                                                                            \
+        --role                      "$ROLE_STORAGE_BLOB_DATA"                                                                                        \
+        --query                     "length(@)"                                                                                                      \
+        --output                    tsv
       )
     if [ "$ROLE_COUNT" -gt 0 ]; then
       break
