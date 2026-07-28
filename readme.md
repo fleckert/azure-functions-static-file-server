@@ -1,26 +1,24 @@
 ## azure-functions-static-file-server
 
-This repository demonstrates the usage of an [Azure Function custom handler](https://learn.microsoft.com/en-us/azure/azure-functions/functions-custom-handlers) to serve static html assets from an Azure Function.
+This repository demonstrates the usage of an [Azure Function custom handler](https://learn.microsoft.com/en-us/azure/azure-functions/functions-custom-handlers) to serve static html assets from an [Azure Function](https://learn.microsoft.com/en-us/azure/azure-functions).
 
 
 ```mermaid
 graph LR
     User["👤 User"]
-    Endpoint["Azure Function"]
+    Endpoint["Azure<br/>Function"]
     Handler["Custom<br/>Handler"]
     AspNet["ASP.NET Core<br/>Application"]
 
-    User -->|HTTP Request| Endpoint
-    Endpoint -->| HTTP Request| Handler
-    Handler -->|Route to App| AspNet
-    AspNet -->|Response| Handler
-    Handler -->| HTTP Response| Endpoint
-    Endpoint -->|HTTP Response| User
+    User -->|HTTP<br/>GET/HEAD/OPTIONS| Endpoint
+    Endpoint -->| HTTP<br/>GET/HEAD/OPTIONS| Handler
+    Handler -->|HTTP<br/>ET/HEAD/OPTIONS| AspNet
+    AspNet -->|HTTP<br/>html/js/css| Handler
+    Handler -->| HTTP<br/>html/js/css| Endpoint
+    Endpoint -->|HTTP<br/>html/js/css| User
 ```
 
 Let's (ab)use the [Azure Function](https://learn.microsoft.com/en-us/azure/azure-functions) as a networking appliance/proxy/... into 'my' application.
-
-This extend this for non-static html assets, extend the `methods` in [function.json](./function/function.json).
 
 ## Why all this...
 
@@ -28,7 +26,7 @@ I liked the `Azure Storage Website with a CDN with a custom domain` pattern and 
 
 I like the full feature set of the [Azure AppService Plan Flex Consumption](https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-plan).
 
-I like the Azure Function progreamming model while being quiet comfortable to not take a dependency on it.
+I like the Azure Function programming model while being quiet comfortable to not take a dependency on it.
 
 This inspired me... https://anthonychu.ca/post/azure-functions-static-file-server/ ... but felt kind of a lot of code compared to
 ```csharp
@@ -46,22 +44,33 @@ The best reason... to fool around and try something and... why not?
 - [.NET SDK 10.0](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 - [Azure Functions Core Tools v4](https://github.com/Azure/azure-functions-core-tools)
 - [Azure CLI](https://github.com/Azure/azure-cli) with [Azure CLI extension authV2](https://github.com/Azure/azure-cli-extensions/blob/main/src/authV2/README.rst)<br/>(`az extension add --name authV2 --upgrade --only-show-errors`)
-- Azure Subscription and RBAC permissions
-  -  `Contributor` and `User Access Administrator` or
-  - `Role Based Access Control Administrator` or
+- an Azure Subscription with RBAC permissions on a resource group
+  - `Contributor` and `User Access Administrator` or
   - `Owner`
-- permissions to create Microsoft Entra Id applications or own an existing application
 
 ## Build and deploy
 
-Run
-- `az login`
-- `./deploy.sh`
+Log in to Azure
+```
+az login
+```
 
-to
+and update the resource names in [deploy.sh](./deploy.sh)
 
-1. Publish the .NET project into `dist`
-1. Provision Azure resources
-1. Publish app with `func azure functionapp publish`
+```
+RG_NAME="<fill_in>"
+APP_NAME="$RG_NAME"
+STORAGE_NAME="$RG_NAME"
+```
 
-and update [wwwroot](./StaticFilesHandler/wwwroot/) with your html assets...
+and start the deployment
+
+```
+chmod +x ./deploy.sh
+./deploy.sh
+```
+
+# Extend
+
+- Update [wwwroot](./StaticFilesHandler/wwwroot/) with your html assets...
+- Extend the `methods` in [function.json](./function/function.json) for a full blown [ASP.NET Core](https://dotnet.microsoft.com/en-us/apps/aspnet) application.
