@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug custom handler (ASP.NET Core only)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: custom handler",
+      "program": "${workspaceFolder}/StaticFilesHandler/bin/Debug/net10.0/StaticFilesHandler.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/StaticFilesHandler",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "FUNCTIONS_CUSTOMHANDLER_PORT": "8080"
+      },
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    },
+    {
+      "name": "Attach to custom handler (start Functions host)",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}",
+      "preLaunchTask": "func: host start",
+      "postDebugTask": "func: host stop",
+      "justMyCode": true
+    }
+  ]
+}

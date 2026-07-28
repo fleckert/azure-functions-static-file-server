@@ -1,0 +1,16 @@
+{
+  "version": "2.0",
+  "customHandler": {
+    "description": {
+      "defaultExecutablePath": "dist/StaticFilesHandler",
+      "workingDirectory": "dist",
+      "arguments": []
+    },
+    "enableForwardingHttpRequest": true
+  },
+  "extensions": {
+    "http": {
+      "routePrefix": ""
+    }
+  }
+}
