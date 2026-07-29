@@ -4,7 +4,7 @@
     "description": {
       "defaultExecutablePath": "dist/StaticFilesHandler",
       "workingDirectory": "dist",
-      "arguments": []
+      "arguments": [ "--urls", "http://127.0.0.1:%FUNCTIONS_CUSTOMHANDLER_PORT%" ]
     },
     "enableForwardingHttpRequest": true
   },
