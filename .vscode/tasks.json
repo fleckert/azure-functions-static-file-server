@@ -11,43 +11,6 @@
       ],
       "group": "build",
       "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "func: host start",
-      "type": "shell",
-      "command": "func host start --verbose",
-      "isBackground": true,
-      "dependsOn": "build: custom handler",
-      "problemMatcher": {
-        "owner": "azureFunctions",
-        "pattern": {
-          "regexp": "^(.*)$",
-          "file": 1,
-          "location": 1,
-          "message": 1
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*Starting Host.*",
-          "endsPattern": ".*Host started.*"
-        }
-      },
-      "options": {
-        "cwd": "${workspaceFolder}"
-      }
-    },
-    {
-      "label": "func: host stop",
-      "type": "shell",
-      "command": "pkill -f \"func host start\"",
-      "problemMatcher": []
-    },
-    {
-      "type": "func",
-      "label": "func: host start",
-      "command": "host start",
-      "problemMatcher": "$func-watch",
-      "isBackground": true
     }
   ]
 }

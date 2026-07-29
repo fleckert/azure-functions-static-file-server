@@ -143,9 +143,10 @@ if ! az functionapp show                                                        
         --scope                     "$STORAGE_ACCOUNT_ID"                                                                                            \
         --role                      "$ROLE_STORAGE_BLOB_DATA"                                                                                        \
         --query                     "length(@)"                                                                                                      \
-        --output                    tsv
+        --output                    tsv                                                                                                              \
+        --only-show-errors
       )
-    if [ "$ROLE_COUNT" -gt 0 ]; then
+    if [ "${ROLE_COUNT:-0}" -gt 0 ]; then
       break
     fi
     ROLE_CHECK_ELAPSED=$((ROLE_CHECK_ELAPSED + ROLE_CHECK_INTERVAL))
@@ -161,14 +162,47 @@ if ! az functionapp show                                                        
 fi
 
 echo ''
-echo '----------------------------------------------------------------------------'
-echo 'Deploying the app...'
-echo '----------------------------------------------------------------------------'
+echo '------------------------'
+echo '| Deploying the app... |'
+echo '------------------------'
 echo ''
 
-func azure functionapp publish "$APP_NAME"
+PUBLISH_RETRY_MAX=5
+PUBLISH_RETRY_COUNT=0
+PUBLISH_OUTPUT=""
+PUBLISH_SUCCESS=false
+
+while [ $PUBLISH_RETRY_COUNT -lt $PUBLISH_RETRY_MAX ]; do
+  PUBLISH_OUTPUT=$(func azure functionapp publish "$APP_NAME") || true
+
+  if echo "$PUBLISH_OUTPUT" | grep -q "The deployment was successful!"; then
+    PUBLISH_SUCCESS=true
+    echo "$PUBLISH_OUTPUT"
+    break
+  else
+    PUBLISH_RETRY_COUNT=$((PUBLISH_RETRY_COUNT + 1))
+    echo "Retrying deployment in 30 seconds... (attempt $PUBLISH_RETRY_COUNT/$PUBLISH_RETRY_MAX)"
+    echo ''
+    if [ $PUBLISH_RETRY_COUNT -lt $PUBLISH_RETRY_MAX ]; then
+      sleep 30
+    fi
+  fi
+done
+
+if [ "$PUBLISH_SUCCESS" = false ]; then
+  echo ''
+  echo "$PUBLISH_OUTPUT"
+  echo ''
+  echo '---------------------'
+  echo '| Deployment failed |'
+  echo '---------------------'
+  echo ''
+
+  exit 1
+fi
 
 echo ''
-echo '----------------------------------------------------------------------------'
-echo 'Deployment complete.'
-echo '----------------------------------------------------------------------------'
+echo '-----------------------'
+echo '| Deployment complete |'
+echo '-----------------------'
+echo ''
