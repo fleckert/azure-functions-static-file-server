@@ -100,6 +100,7 @@ if ! az functionapp show                                                        
     --set                           properties.minTlsVersion=1.2                                                                                     \
                                     properties.scmMinTlsVersion=1.2                                                                                  \
                                     properties.healthCheckPath=/health                                                                               \
+                                    properties.http20Enabled=true                                                                                    \
     --output                        none                                                                                                             \
     --only-show-errors
 
