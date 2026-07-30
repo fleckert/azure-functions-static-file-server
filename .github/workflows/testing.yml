@@ -1,0 +1,49 @@
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+
+    - run: |
+        dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
+            --configuration   Release                               \
+            --runtime         'linux-x64'                           \
+            --self-contained  true                                  \
+            --output          dist                                  \
+            --property:OutputType=Exe                               \
+            --property:PublishSingleFile=true
+
+    - run: sudo apt-get install -y azure-functions-core-tools-4
+
+    - run: func start &
+
+    - run: |
+        for i in {1..30}; do
+            if curl -s http://localhost:7071/ -o index.html; then
+                break
+            fi
+            echo "Waiting for Functions host to start..."
+            sleep 2
+        done
+
+        [ -s index.html ] || { echo "index.html is missing or empty"; exit 1; }
+        
+        echo ''
+        echo '------------------------------------------------------------'
+        echo "index.html content:"
+        echo '------------------------------------------------------------'
+        echo ''
+        cat index.html
+        echo ''
+        echo '------------------------------------------------------------'
+ 
