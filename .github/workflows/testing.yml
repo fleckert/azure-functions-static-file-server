@@ -25,9 +25,9 @@ jobs:
 
     - run: sudo apt-get install -y azure-functions-core-tools-4
 
-    - run: |
-        func start &
+    - run: func start &
 
+    - run: |
         for i in {1..30}; do
             if curl -s http://localhost:7071/ -o index.html; then
                 break
@@ -46,3 +46,4 @@ jobs:
         cat index.html
         echo ''
         echo '------------------------------------------------------------'
+ 
