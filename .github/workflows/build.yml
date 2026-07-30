@@ -14,10 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    # - uses: actions/setup-dotnet@v6
-    #   with:
-    #     dotnet-version: 10.0.x
-
     - run: |
         dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
             --configuration   Release                               \
@@ -27,17 +23,11 @@ jobs:
             --property:OutputType=Exe                               \
             --property:PublishSingleFile=true
 
-    # - uses: actions/setup-node@v7
-    #   with:
-    #     node-version: 22
-
-    - run: npm install -g azurite
-
     - run: sudo apt-get install -y azure-functions-core-tools-4
 
-    - run: azurite --inMemoryPersistence --skipApiVersionCheck &
-    - run: func start &
     - run: |
+        func start &
+
         for i in {1..30}; do
             if curl -s http://localhost:7071/ -o index.html; then
                 break
