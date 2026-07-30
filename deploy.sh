@@ -100,6 +100,7 @@ if ! az functionapp show                                                        
     --set                           properties.minTlsVersion=1.2                                                                                     \
                                     properties.scmMinTlsVersion=1.2                                                                                  \
                                     properties.healthCheckPath=/health                                                                               \
+                                    properties.http20Enabled=true                                                                                    \
     --output                        none                                                                                                             \
     --only-show-errors
 
@@ -169,40 +170,37 @@ echo ''
 
 PUBLISH_RETRY_MAX=5
 PUBLISH_RETRY_COUNT=0
-PUBLISH_OUTPUT=""
-PUBLISH_SUCCESS=false
 
-while [ $PUBLISH_RETRY_COUNT -lt $PUBLISH_RETRY_MAX ]; do
+while true; do
   PUBLISH_OUTPUT=$(func azure functionapp publish "$APP_NAME") || true
 
   if echo "$PUBLISH_OUTPUT" | grep -q "The deployment was successful!"; then
-    PUBLISH_SUCCESS=true
+    echo ''
     echo "$PUBLISH_OUTPUT"
-    break
+    echo ''
+    echo '-----------------------'
+    echo '| Deployment complete |'
+    echo '-----------------------'
+    echo ''
+
+    exit 0
   else
     PUBLISH_RETRY_COUNT=$((PUBLISH_RETRY_COUNT + 1))
-    echo "Retrying deployment in 30 seconds... (attempt $PUBLISH_RETRY_COUNT/$PUBLISH_RETRY_MAX)"
-    echo ''
+
     if [ $PUBLISH_RETRY_COUNT -lt $PUBLISH_RETRY_MAX ]; then
+      echo "Retrying deployment in 30 seconds... (attempt $PUBLISH_RETRY_COUNT/$PUBLISH_RETRY_MAX)"
       sleep 30
+    else
+      echo ''
+      echo "$PUBLISH_OUTPUT"
+      echo ''
+      echo '---------------------'
+      echo '| Deployment failed |'
+      echo '---------------------'
+      echo ''
+
+      exit 1
     fi
   fi
 done
 
-if [ "$PUBLISH_SUCCESS" = false ]; then
-  echo ''
-  echo "$PUBLISH_OUTPUT"
-  echo ''
-  echo '---------------------'
-  echo '| Deployment failed |'
-  echo '---------------------'
-  echo ''
-
-  exit 1
-fi
-
-echo ''
-echo '-----------------------'
-echo '| Deployment complete |'
-echo '-----------------------'
-echo ''
