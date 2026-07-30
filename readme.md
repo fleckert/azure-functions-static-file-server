@@ -70,7 +70,36 @@ chmod +x ./deploy.sh
 ./deploy.sh
 ```
 
-# Extend
+## Extend
 
 - Update [wwwroot](./StaticFilesHandler/wwwroot/) with your html assets...
 - Extend the `methods` in [http-proxy/function.json](./http-proxy/function.json) for a full blown [ASP.NET Core](https://dotnet.microsoft.com/en-us/apps/aspnet) application.
+
+
+## local execution
+
+Build the .Net application
+
+```
+dotnet publish StaticFilesHandler/StaticFilesHandler.csproj --property:OutputType=Exe --property:PublishSingleFile=true --output dist 
+```
+
+and start the Azure Function
+
+```
+func start
+```
+
+and visit http://localhost:7071.
+
+To avoid warnings like 
+```JSON
+[Tag=''] Process reporting unhealthy: Unhealthy. Health check entries are {"azure.functions.web_host.lifecycle":{"status":"Healthy","description":null},"azure.functions.script_host.lifecycle":{"status":"Healthy","description":null},"azure.functions.webjobs.storage":{"status":"Unhealthy","description":"A timeout occurred while running check."}}
+```
+
+start the [Azurite emulator](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite)
+
+```
+azurite --inMemoryPersistence
+```
+ 

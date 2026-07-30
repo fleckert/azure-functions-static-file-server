@@ -2,6 +2,6 @@
   "IsEncrypted": false,
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "Custom",
-    "FUNCTIONS_CUSTOMHANDLER_PORT": "8080"
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true"
   }
 }
