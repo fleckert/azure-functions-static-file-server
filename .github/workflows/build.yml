@@ -14,9 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - uses: actions/setup-dotnet@v6
-      with:
-        dotnet-version: 10.0.x
+    # - uses: actions/setup-dotnet@v6
+    #   with:
+    #     dotnet-version: 10.0.x
 
     - run: |
         dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
@@ -27,9 +27,9 @@ jobs:
             --property:OutputType=Exe                               \
             --property:PublishSingleFile=true
 
-    - uses: actions/setup-node@v7
-      with:
-        node-version: 22
+    # - uses: actions/setup-node@v7
+    #   with:
+    #     node-version: 22
 
     - run: npm install -g azurite
 
@@ -51,6 +51,7 @@ jobs:
         echo ''
         echo '------------------------------------------------------------'
         echo "index.html content:"
+        echo '------------------------------------------------------------'
         echo ''
         cat index.html
         echo ''
