@@ -73,4 +73,4 @@ chmod +x ./deploy.sh
 # Extend
 
 - Update [wwwroot](./StaticFilesHandler/wwwroot/) with your html assets...
-- Extend the `methods` in [function.json](./function/function.json) for a full blown [ASP.NET Core](https://dotnet.microsoft.com/en-us/apps/aspnet) application.
+- Extend the `methods` in [http-proxy/function.json](./http-proxy/function.json) for a full blown [ASP.NET Core](https://dotnet.microsoft.com/en-us/apps/aspnet) application.
