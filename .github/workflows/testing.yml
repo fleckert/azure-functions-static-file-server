@@ -20,8 +20,12 @@ jobs:
             --runtime         'linux-x64'                           \
             --self-contained  true                                  \
             --output          dist                                  \
+            --property:DebugSymbols=false                           \
+            --property:DebugType=None                               \
+            --property:InvariantGlobalization=true                  \
             --property:OutputType=Exe                               \
-            --property:PublishSingleFile=true
+            --property:PublishSingleFile=true                       \
+            --property:PublishTrimmed=true
 
     - run: sudo apt-get install -y azure-functions-core-tools-4
 
@@ -29,15 +33,18 @@ jobs:
 
     - run: |
         for i in {1..30}; do
-            if curl -s http://localhost:7071/ -o index.html; then
+            HTTP=$(curl -s -o index.html -w "%{http_code}" http://localhost:7071/)
+            if [ "$HTTP" = "200" ]; then
                 break
             fi
-            echo "Waiting for Functions host to start..."
+            echo "Waiting for Functions host to start... (last status: $HTTP)"
             sleep 2
         done
 
-        [ -s index.html ] || { echo "index.html is missing or empty"; exit 1; }
-        
+        [ "$HTTP" = "200" ] || { echo "Expected HTTP 200, got $HTTP"; exit 1; }
+
+        grep -q "azure-functions-static-file-server" index.html || { echo "Unexpected index.html content"; exit 1; }
+
         echo ''
         echo '------------------------------------------------------------'
         echo "index.html content:"
@@ -46,4 +53,3 @@ jobs:
         cat index.html
         echo ''
         echo '------------------------------------------------------------'
- 

@@ -22,8 +22,12 @@ dotnet publish StaticFilesHandler/StaticFilesHandler.csproj                     
   --runtime                         'linux-x64'                                                                                                      \
   --self-contained                  true                                                                                                             \
   --output                          dist                                                                                                             \
+  --property:DebugSymbols=false                                                                                                                      \
+  --property:DebugType=None                                                                                                                          \
+  --property:InvariantGlobalization=true                                                                                                             \
   --property:OutputType=Exe                                                                                                                          \
-  --property:PublishSingleFile=true
+  --property:PublishSingleFile=true                                                                                                                  \
+  --property:PublishTrimmed=true
 
 # create semantics, no update
 if ! az functionapp show                                                                                                                             \
