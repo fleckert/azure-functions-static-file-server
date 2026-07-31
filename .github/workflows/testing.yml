@@ -14,6 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
+    - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
+
     - run: |
         dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
             --configuration   Release                               \
