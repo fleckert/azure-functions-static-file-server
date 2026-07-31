@@ -18,20 +18,33 @@ graph LR
     Endpoint -->|HTTP<br/>html/js/css| User
 ```
 
-Let's (ab)use the [Azure Function](https://learn.microsoft.com/en-us/azure/azure-functions) as a networking appliance/proxy/... into 'my' application.
+The purpose of this repository is not to replace:
+
+- Azure Static Web Apps
+- Azure Storage Static Websites
+- App Service
+
+Instead it demonstrates how [Azure Function Custom Handler](https://learn.microsoft.com/en-us/azure/azure-functions/functions-custom-handlers) can host a standard ASP.NET Core application and static assets with minimal Azure Functions-specific code on [Azure AppService Plan Flex Consumption](https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-plan).
 
 ## Why all this...
 
-I liked the `Azure Storage Website with a CDN with a custom domain` pattern and the costs increased due to sundowned services and [Azure Front Door](https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview) being expensive.
+Using an [Azure Static Web App](https://azure.microsoft.com/en-us/products/app-service/static) is an option... but this repo is about static html/js/css hosting in a cost effective manner on Azure.
 
-I like the full feature set of the [Azure AppService Plan Flex Consumption](https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-plan).
+Using an [Azure AppService Plan Flex Consumption](https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-plan) has these upsides
+- up to [500](https://azure.github.io/AppService/2017/08/08/FAQ-App-Service-Domain-and-Custom-Domains.html) [custom domains](https://learn.microsoft.com/en-us/azure/app-service/overview-custom-domains)
+- unlimited [Microsoft Entra ID](https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id) [authentication](https://learn.microsoft.com/en-us/azure/app-service/overview-authentication-authorization)
+- extensive Azure regions support
+- [virtual network integration](https://learn.microsoft.com/en-us/azure/app-service/overview-vnet-integration)
+- very cost effective
+
 
 I like the Azure Function programming model while being quiet comfortable to not take a dependency on it.
 
 This inspired me... https://anthonychu.ca/post/azure-functions-static-file-server/ ... but felt kind of a lot of code compared to
 ```csharp
 app.UseDefaultFiles(new DefaultFilesOptions { DefaultFileNames = { "index.html" } });
-app.UseStaticFiles();
+app.UseRouting();
+app.MapStaticAssets();
 ```
 
 
@@ -81,7 +94,7 @@ chmod +x ./deploy.sh
 Build the .Net application
 
 ```
-dotnet publish StaticFilesHandler/StaticFilesHandler.csproj --property:OutputType=Exe --property:PublishSingleFile=true --output dist 
+dotnet publish StaticFilesHandler/StaticFilesHandler.csproj --property:OutputType=Exe --property:PublishSingleFile=true --property:PublishTrimmed=true --property:InvariantGlobalization=true --output dist
 ```
 
 and start the Azure Function
@@ -103,3 +116,24 @@ start the [Azurite emulator](https://learn.microsoft.com/en-us/azure/storage/com
 azurite --inMemoryPersistence
 ```
  
+## links
+- Azure Functions
+  - https://learn.microsoft.com/en-us/azure/azure-functions/functions-custom-handlers
+  -  https://json.schemastore.org/host.json
+- Azure AppService
+  - https://learn.microsoft.com/en-us/azure/app-service/configure-ssl-certificate
+  - https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale
+  - https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-how-to
+  - https://json.schemastore.org/host.json
+- Azure Static Web Apps Pläne
+  - https://learn.microsoft.com/en-us/azure/static-web-apps/plans
+  - https://learn.microsoft.com/en-us/azure/static-web-apps/quotas
+  - https://learn.microsoft.com/en-us/azure/static-web-apps/faq
+  - https://learn.microsoft.com/en-us/azure/static-web-apps/deployment-token-management
+- Azure CDN
+  - https://learn.microsoft.com/en-us/azure/cdn/classic-cdn-retirement-faq
+- Azure Front Door
+  - https://learn.microsoft.com/en-us/azure/frontdoor/understanding-pricing
+- ASMC-Änderung Juli 2025 / Nachtrag November 2025 — https://go.microsoft.com/fwlink/?linkid=2328307
+- MapStaticAssets — https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files
+- EU Data Boundary, non regional servicel — https://learn.microsoft.com/en-us/privacy/eudb/eu-data-boundary-configure-azure-nonregional-services
