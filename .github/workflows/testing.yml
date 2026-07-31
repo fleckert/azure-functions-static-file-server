@@ -27,17 +27,39 @@ jobs:
 
     - run: func start &
 
-    - run: |
+    - name: Wait for the Functions host
+      run: |
         for i in {1..30}; do
-            if curl -s http://localhost:7071/ -o index.html; then
-                break
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:7071/)" = '200' ]; then
+                echo "Functions host is up."
+                exit 0
             fi
             echo "Waiting for Functions host to start..."
             sleep 2
         done
 
-        [ -s index.html ] || { echo "index.html is missing or empty"; exit 1; }
-        
+        echo 'The Functions host did not serve HTTP 200 on / within 60 seconds.'
+        exit 1
+
+    - name: GET / returns the static file
+      run: |
+        STATUS=$(curl -s -o index.html -w '%{http_code}' http://localhost:7071/)
+
+        [ "$STATUS" = '200' ] || { echo "expected HTTP 200 on /, got $STATUS"; exit 1; }
+
+        # A wrong routePrefix, a stopped custom handler or a misconfigured host.json
+        # still answers / with HTTP 200 and the default Azure Functions landing page,
+        # so the status code alone is not enough to prove the site is served.
+        grep -q 'This HTML page is served by an Azure Function App' index.html || {
+            echo 'the response body is not the expected static file'
+            echo ''
+            echo '------------------------------------------------------------'
+            head -c 500 index.html
+            echo ''
+            echo '------------------------------------------------------------'
+            exit 1
+        }
+
         echo ''
         echo '------------------------------------------------------------'
         echo "index.html content:"
@@ -46,4 +68,22 @@ jobs:
         cat index.html
         echo ''
         echo '------------------------------------------------------------'
- 
+
+    - name: GET /favicon.ico returns the static file
+      run: |
+        STATUS=$(curl -s -o favicon.ico -w '%{http_code}' http://localhost:7071/favicon.ico)
+
+        [ "$STATUS" = '200' ] || { echo "expected HTTP 200 on /favicon.ico, got $STATUS"; exit 1; }
+        [ -s favicon.ico     ] || { echo 'favicon.ico is empty'                        ; exit 1; }
+
+    - name: GET /health returns 200
+      run: |
+        STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:7071/health)
+
+        [ "$STATUS" = '200' ] || { echo "expected HTTP 200 on /health, got $STATUS"; exit 1; }
+
+    - name: GET an unknown path returns 404
+      run: |
+        STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:7071/this-file-does-not-exist)
+
+        [ "$STATUS" = '404' ] || { echo "expected HTTP 404 on an unknown path, got $STATUS"; exit 1; }
