@@ -23,7 +23,8 @@ dotnet publish StaticFilesHandler/StaticFilesHandler.csproj                     
   --self-contained                  true                                                                                                             \
   --output                          dist                                                                                                             \
   --property:OutputType=Exe                                                                                                                          \
-  --property:PublishSingleFile=true
+  --property:PublishSingleFile=true                                                                                                                  \
+  --property:PublishTrimmed=true
 
 # create semantics, no update
 if ! az functionapp show                                                                                                                             \
