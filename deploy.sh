@@ -5,9 +5,10 @@ TENANT_ID=$(      az account show --query tenantId --output tsv --only-show-erro
 SUBSCRIPTION_ID=$(az account show --query id       --output tsv --only-show-errors)
 LOCATION="germanywestcentral"
 
-RG_NAME="test$(date +%s)"
-APP_NAME="$RG_NAME"
-STORAGE_NAME="$RG_NAME"
+RG_NAME="azure-functions-static-file-server"
+RUN_ID=$(date +%s)
+APP_NAME="sttcflsrvr$RUN_ID"
+STORAGE_NAME="sttcflsrvr$RUN_ID"
 
 echo ''
 echo '-----------------------'
