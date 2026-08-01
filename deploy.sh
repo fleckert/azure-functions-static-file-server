@@ -51,7 +51,7 @@ if ! az functionapp show                                                        
     --name                          "$RG_NAME"                                                                                                       \
     --location                      "$LOCATION"                                                                                                      \
     --output                        none                                                                                                             \
-    --only-show-errors
+    --only-show-errors              2>/dev/null
   
   az storage account create                                                                                                                          \
     --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
