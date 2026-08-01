@@ -46,12 +46,12 @@ if ! az functionapp show                                                        
 
   ROLE_STORAGE_BLOB_DATA="Storage Blob Data Contributor"
   
-  # az group create                                                                                                                                    \
-  #   --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
-  #   --name                          "$RG_NAME"                                                                                                       \
-  #   --location                      "$LOCATION"                                                                                                      \
-  #   --output                        none                                                                                                             \
-  #   --only-show-errors
+  az group create                                                                                                                                    \
+    --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
+    --name                          "$RG_NAME"                                                                                                       \
+    --location                      "$LOCATION"                                                                                                      \
+    --output                        none                                                                                                             \
+    --only-show-errors
   
   az storage account create                                                                                                                          \
     --subscription                  "$SUBSCRIPTION_ID"                                                                                               \
