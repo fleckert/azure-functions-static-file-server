@@ -24,7 +24,7 @@ jobs:
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         client-id      : ${{ secrets.AZURE_CLIENT_ID       }}
 
-    - run: ./deploy.sh "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+    - run: ./deploy.sh
 
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 

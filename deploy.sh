@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -exuo pipefail
 
-SUBSCRIPTION_ID="${1:?Error: subscription ID must be provided as first argument}"
+TENANT_ID=$(      az account show --query tenantId --output tsv --only-show-errors)
+SUBSCRIPTION_ID=$(az account show --query id       --output tsv --only-show-errors)
 LOCATION="germanywestcentral"
 
 RG_NAME="azure-functions-static-file-server"
