@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -exuo pipefail
+set -euo pipefail
 
 az     --version || { echo "az CLI is not installed"    ; exit 1; }
 dotnet --version || { echo "dotnet CLI is not installed"; exit 1; }
