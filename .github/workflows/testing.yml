@@ -20,7 +20,7 @@ jobs:
 
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 
-  local-hosting-test:
+  test-local-hosting:
     needs: [ test-build ]
     runs-on: ubuntu-latest
     steps:
@@ -70,8 +70,8 @@ jobs:
         echo ''
         echo '------------------------------------------------------------'
   
-  azure-hosting-test:
-    needs: [ local-hosting-test ]
+  test-azure-hosting-test:
+    needs: [ test-local-hosting ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
