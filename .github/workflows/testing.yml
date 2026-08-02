@@ -13,22 +13,18 @@ permissions:
   id-token: write
 
 jobs:
-  build:
+  test-build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
 
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 
-  local:
-    needs: [ build ]
+  local-hosting-test:
+    needs: [ test-build ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
-
-    - run: sudo apt-get install -y azure-functions-core-tools-4
-
-    - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 
     - run: |
         dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
@@ -43,15 +39,19 @@ jobs:
             --property:PublishSingleFile=true                       \
             --property:PublishTrimmed=true
 
+            - run: sudo apt-get install -y azure-functions-core-tools-4
+
     - run: func start &
 
     - run: |
+        URL="http://localhost:7071/"
+
         for i in {1..30}; do
-            HTTP=$(curl -s -o index.html -w "%{http_code}" http://localhost:7071/)
+            HTTP=$(curl -s -o index.html -w "%{http_code}" "$URL")
             if [ "$HTTP" = "200" ]; then
                 break
             fi
-            echo "Waiting for Functions host to start... (last status: $HTTP)"
+            echo "Waiting for Functions host '$URL' to start... (last status: $HTTP)"
             sleep 2
         done
 
@@ -70,8 +70,8 @@ jobs:
         echo ''
         echo '------------------------------------------------------------'
   
-  azure:
-    needs: [ local ]
+  azure-hosting-test:
+    needs: [ local-hosting-test ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -87,12 +87,14 @@ jobs:
     - run: ./deploy.sh ${{ github.run_id }}
 
     - run: |
+        URL="https://sttcflsrvr${{ github.run_id }}.azurewebsites.net"
+
         for i in {1..30}; do
-            HTTP=$(curl -s -o index.html -w "%{http_code}" https://sttcflsrvr${{ github.run_id }}.azurewebsites.net)
+            HTTP=$(curl -s -o index.html -w "%{http_code}" "$URL")
             if [ "$HTTP" = "200" ]; then
                 break
             fi
-            echo "Waiting for Functions host to start... (last status: $HTTP)"
+            echo "Waiting for Functions host '$URL' to start... (last status: $HTTP)"
             sleep 2
         done
 
