@@ -24,6 +24,8 @@ jobs:
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         client-id      : ${{ secrets.AZURE_CLIENT_ID       }}
 
+    - run: sudo apt-get install -y azure-functions-core-tools-4
+
     - run: ./deploy.sh
 
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
@@ -40,8 +42,6 @@ jobs:
             --property:OutputType=Exe                               \
             --property:PublishSingleFile=true                       \
             --property:PublishTrimmed=true
-
-    - run: sudo apt-get install -y azure-functions-core-tools-4
 
     - run: func start &
 
