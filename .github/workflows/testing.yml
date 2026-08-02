@@ -39,7 +39,7 @@ jobs:
             --property:PublishSingleFile=true                       \
             --property:PublishTrimmed=true
 
-            - run: sudo apt-get install -y azure-functions-core-tools-4
+    - run: sudo apt-get install -y azure-functions-core-tools-4
 
     - run: func start &
 
