@@ -70,7 +70,7 @@ jobs:
         echo ''
         echo '------------------------------------------------------------'
   
-  test-azure-hosting-test:
+  test-azure-hosting:
     needs: [ test-local-hosting ]
     runs-on: ubuntu-latest
     steps:
