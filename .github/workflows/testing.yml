@@ -102,6 +102,8 @@ jobs:
 
         grep -q "azure-functions-static-file-server" index.html || { echo "Unexpected index.html content"; exit 1; }
 
+        diff -q index.html StaticFilesHandler/wwwroot/index.html || { echo "Downloaded index.html does not match source file"; exit 1; }
+
         echo ''
         echo '------------------------------------------------------------'
         echo "index.html content:"
