@@ -84,10 +84,10 @@ jobs:
 
     - run: sudo apt-get install -y azure-functions-core-tools-4
 
-    - run: ./deploy.sh ${{ github.run_id }}${{ github.run_number }}
+    - run: ./deploy.sh ${{ github.run_id }}${{ github.run_attempt }}
 
     - run: |
-        URL="https://sttcflsrvr${{ github.run_id }}${{ github.run_number }}.azurewebsites.net"
+        URL="https://sttcflsrvr${{ github.run_id }}${{ github.run_attempt }}.azurewebsites.net"
 
         for i in {1..30}; do
             HTTP=$(curl -s -o index.html -w "%{http_code}" "$URL")
