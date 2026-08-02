@@ -13,7 +13,59 @@ permissions:
   id-token: write
 
 jobs:
-  job:
+  dotnet:
+    runs-on: ubuntu-latest
+    steps:
+    - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
+
+  local:
+    needs: [ dotnet ]
+    runs-on: ubuntu-latest
+    steps:
+    - run: sudo apt-get install -y azure-functions-core-tools-4
+
+    - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
+
+    - run: |
+        dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
+            --configuration   Release                               \
+            --runtime         'linux-x64'                           \
+            --self-contained  true                                  \
+            --output          dist                                  \
+            --property:DebugSymbols=false                           \
+            --property:DebugType=None                               \
+            --property:InvariantGlobalization=true                  \
+            --property:OutputType=Exe                               \
+            --property:PublishSingleFile=true                       \
+            --property:PublishTrimmed=true
+
+    - run: func start &
+
+    - run: |
+        for i in {1..30}; do
+            HTTP=$(curl -s -o index.html -w "%{http_code}" http://localhost:7071/)
+            if [ "$HTTP" = "200" ]; then
+                break
+            fi
+            echo "Waiting for Functions host to start... (last status: $HTTP)"
+            sleep 2
+        done
+
+        [ "$HTTP" = "200" ] || { echo "Expected HTTP 200, got $HTTP"; exit 1; }
+
+        grep -q "azure-functions-static-file-server" index.html || { echo "Unexpected index.html content"; exit 1; }
+
+        echo ''
+        echo '------------------------------------------------------------'
+        echo "index.html content:"
+        echo '------------------------------------------------------------'
+        echo ''
+        cat index.html
+        echo ''
+        echo '------------------------------------------------------------'
+  
+  azure:
+    needs: [ local ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
