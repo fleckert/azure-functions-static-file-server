@@ -13,16 +13,21 @@ permissions:
   id-token: write
 
 jobs:
-  dotnet:
+  build:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v7
+
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 
   local:
-    needs: [ dotnet ]
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v7
+    
     - run: sudo apt-get install -y azure-functions-core-tools-4
+
 
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 

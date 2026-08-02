@@ -100,7 +100,7 @@ dotnet publish StaticFilesHandler/StaticFilesHandler.csproj --property:OutputTyp
 and start the Azure Function
 
 ```
-func start
+AzureWebJobsStorage="UseDevelopmentStorage=true" func start --custom
 ```
 
 and visit http://localhost:7071.
@@ -137,3 +137,8 @@ azurite --inMemoryPersistence
 - ASMC-Änderung Juli 2025 / Nachtrag November 2025 — https://go.microsoft.com/fwlink/?linkid=2328307
 - MapStaticAssets — https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files
 - EU Data Boundary, non regional servicel — https://learn.microsoft.com/en-us/privacy/eudb/eu-data-boundary-configure-azure-nonregional-services
+
+
+## Azure Resource providers
+- Microsoft.Storage
+- Microsoft.Web
