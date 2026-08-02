@@ -25,9 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
-    
-    - run: sudo apt-get install -y azure-functions-core-tools-4
 
+    - run: sudo apt-get install -y azure-functions-core-tools-4
 
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 
@@ -60,6 +59,8 @@ jobs:
 
         grep -q "azure-functions-static-file-server" index.html || { echo "Unexpected index.html content"; exit 1; }
 
+        diff -q index.html StaticFilesHandler/wwwroot/index.html || { echo "Downloaded index.html does not match source file"; exit 1; }
+        
         echo ''
         echo '------------------------------------------------------------'
         echo "index.html content:"
@@ -83,28 +84,11 @@ jobs:
 
     - run: sudo apt-get install -y azure-functions-core-tools-4
 
-    - run: ./deploy.sh
-
-    - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
-
-    - run: |
-        dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
-            --configuration   Release                               \
-            --runtime         'linux-x64'                           \
-            --self-contained  true                                  \
-            --output          dist                                  \
-            --property:DebugSymbols=false                           \
-            --property:DebugType=None                               \
-            --property:InvariantGlobalization=true                  \
-            --property:OutputType=Exe                               \
-            --property:PublishSingleFile=true                       \
-            --property:PublishTrimmed=true
-
-    - run: func start &
+    - run: ./deploy.sh ${{ github.run_id }}
 
     - run: |
         for i in {1..30}; do
-            HTTP=$(curl -s -o index.html -w "%{http_code}" http://localhost:7071/)
+            HTTP=$(curl -s -o index.html -w "%{http_code}" https://sttcflsrvr${{ github.run_id }}.azurewebsites.net)
             if [ "$HTTP" = "200" ]; then
                 break
             fi

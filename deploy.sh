@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -exuo pipefail
 
-TENANT_ID=$(      az account show --query tenantId --output tsv --only-show-errors)
-SUBSCRIPTION_ID=$(az account show --query id       --output tsv --only-show-errors)
+az     --version || { echo "az CLI is not installed"    ; exit 1; }
+dotnet --version || { echo "dotnet CLI is not installed"; exit 1; }
+func   --version || { echo "func CLI is not installed". ; exit 1; }
+
+RUN_ID="${1:-$(date +%s)}"
+
+SUBSCRIPTION_ID=$(az account show --query id --output tsv --only-show-errors)
 LOCATION="germanywestcentral"
 
 RG_NAME="azure-functions-static-file-server"
-RUN_ID=$(date +%s)
 APP_NAME="sttcflsrvr$RUN_ID"
 STORAGE_NAME="sttcflsrvr$RUN_ID"
 
