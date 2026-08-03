@@ -43,33 +43,8 @@ jobs:
 
     - run: func start &
 
-    - run: |
-        URL="http://localhost:7071/"
+    - run: ./check.sh "http://localhost:7071/"
 
-        for i in {1..30}; do
-            HTTP=$(curl -s -o index.html -w "%{http_code}" "$URL")
-            if [ "$HTTP" = "200" ]; then
-                break
-            fi
-            echo "Waiting for Functions host '$URL' to start... (last status: $HTTP)"
-            sleep 2
-        done
-
-        [ "$HTTP" = "200" ] || { echo "Expected HTTP 200, got $HTTP"; exit 1; }
-
-        grep -q "azure-functions-static-file-server" index.html || { echo "Unexpected index.html content"; exit 1; }
-
-        diff -q index.html StaticFilesHandler/wwwroot/index.html || { echo "Downloaded index.html does not match source file"; exit 1; }
-        
-        echo ''
-        echo '------------------------------------------------------------'
-        echo "index.html content:"
-        echo '------------------------------------------------------------'
-        echo ''
-        cat index.html
-        echo ''
-        echo '------------------------------------------------------------'
-  
   test-azure-hosting:
     needs: [ test-local-hosting ]
     runs-on: ubuntu-latest
@@ -90,38 +65,15 @@ jobs:
           azure-functions-static-file-server   \
           sttcflsrvr${{ github.run_id }}${{ github.run_attempt }}
 
-    - run: |
-        URL="https://sttcflsrvr${{ github.run_id }}${{ github.run_attempt }}.azurewebsites.net"
+    - run: ./check.sh "https://sttcflsrvr${{ github.run_id }}${{ github.run_attempt }}.azurewebsites.net"
 
-        for i in {1..30}; do
-            HTTP=$(curl -s -o index.html -w "%{http_code}" "$URL")
-            if [ "$HTTP" = "200" ]; then
-                break
-            fi
-            echo "Waiting for Functions host '$URL' to start... (last status: $HTTP)"
-            sleep 2
-        done
-
-        [ "$HTTP" = "200" ] || { echo "Expected HTTP 200, got $HTTP"; exit 1; }
-
-        grep -q "azure-functions-static-file-server" index.html || { echo "Unexpected index.html content"; exit 1; }
-
-        diff -q index.html StaticFilesHandler/wwwroot/index.html || { echo "Downloaded index.html does not match source file"; exit 1; }
-
-        echo ''
-        echo '------------------------------------------------------------'
-        echo "index.html content:"
-        echo '------------------------------------------------------------'
-        echo ''
-        cat index.html
-        echo ''
-        echo '------------------------------------------------------------'
-  
   cleanup-azure-hosting:
     needs: [ test-azure-hosting ]
     if: always()
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v7
+
     - uses: azure/login@v3
       with:
         tenant-id      : ${{ secrets.AZURE_TENANT_ID       }}
