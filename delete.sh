@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-az --version || { echo "az CLI is not installed"; exit 1; }
+az --version > /dev/null || { echo "az CLI is not installed"; exit 1; }
 
 SUBSCRIPTION_ID="${1}"
 RG_NAME="${2}"

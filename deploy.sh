@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-az     --version || { echo "az CLI is not installed"    ; exit 1; }
-dotnet --version || { echo "dotnet CLI is not installed"; exit 1; }
-func   --version || { echo "func CLI is not installed". ; exit 1; }
+az     --version > /dev/null || { echo "az CLI is not installed"    ; exit 1; }
+dotnet --version > /dev/null || { echo "dotnet CLI is not installed"; exit 1; }
+func   --version > /dev/null || { echo "func CLI is not installed"  ; exit 1; }
 
 SUBSCRIPTION_ID="${1}"
 RG_NAME="${2}"
