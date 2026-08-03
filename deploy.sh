@@ -5,14 +5,14 @@ az     --version || { echo "az CLI is not installed"    ; exit 1; }
 dotnet --version || { echo "dotnet CLI is not installed"; exit 1; }
 func   --version || { echo "func CLI is not installed". ; exit 1; }
 
-RUN_ID="${1:-$(date +%s)}"
+SUBSCRIPTION_ID="${1}"
+RG_NAME="${2}"
+NAME="${3}"
 
-SUBSCRIPTION_ID=$(az account show --query id --output tsv --only-show-errors)
 LOCATION="germanywestcentral"
 
-RG_NAME="azure-functions-static-file-server"
-APP_NAME="sttcflsrvr$RUN_ID"
-STORAGE_NAME="sttcflsrvr$RUN_ID"
+APP_NAME="$NAME"
+STORAGE_NAME="$NAME"
 
 echo ''
 echo '-----------------------'
