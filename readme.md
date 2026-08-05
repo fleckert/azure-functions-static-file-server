@@ -56,31 +56,43 @@ The best reason... to fool around and try something and... why not?
 - a Bash-compatible shell
 - [.NET SDK 10.0](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 - [Azure Functions Core Tools v4](https://github.com/Azure/azure-functions-core-tools)
-- [Azure CLI](https://github.com/Azure/azure-cli) with [Azure CLI extension authV2](https://github.com/Azure/azure-cli-extensions/blob/main/src/authV2/README.rst)<br/>(`az extension add --name authV2 --upgrade --only-show-errors`)
+- [Azure CLI](https://github.com/Azure/azure-cli)
 - an Azure Subscription with RBAC permissions on a resource group
   - `Contributor` and `User Access Administrator` or
   - `Owner`
 
-## Build and deploy
+## Local execution
+
+Start the Static File Server with
+
+```
+make
+```
+
+and visit http://localhost:7071.
+
+
+
+
+## Deploy to Azure
 
 Log in to Azure
+
 ```
 az login
 ```
-
-and update the resource names in [deploy.sh](./deploy.sh)
+and update the values in [Makefile](./Makefile) or create an `.env` file with
 
 ```
+SUBSCRIPTION_ID="<fill_in>"
 RG_NAME="<fill_in>"
-APP_NAME="$RG_NAME"
-STORAGE_NAME="$RG_NAME"
+NAME="<fill_in>"
 ```
 
 and start the deployment
 
 ```
-chmod +x ./deploy.sh
-./deploy.sh
+make deploy
 ```
 
 ## Extend
@@ -89,33 +101,6 @@ chmod +x ./deploy.sh
 - Extend the `methods` in [http-proxy/function.json](./http-proxy/function.json) for a full blown [ASP.NET Core](https://dotnet.microsoft.com/en-us/apps/aspnet) application.
 
 
-## local execution
-
-Build the .Net application
-
-```
-dotnet publish StaticFilesHandler/StaticFilesHandler.csproj --property:OutputType=Exe --property:PublishSingleFile=true --property:PublishTrimmed=true --property:InvariantGlobalization=true --output dist
-```
-
-and start the Azure Function
-
-```
-AzureWebJobsStorage="UseDevelopmentStorage=true" func start --custom
-```
-
-and visit http://localhost:7071.
-
-To avoid warnings like 
-```JSON
-[Tag=''] Process reporting unhealthy: Unhealthy. Health check entries are {"azure.functions.web_host.lifecycle":{"status":"Healthy","description":null},"azure.functions.script_host.lifecycle":{"status":"Healthy","description":null},"azure.functions.webjobs.storage":{"status":"Unhealthy","description":"A timeout occurred while running check."}}
-```
-
-start the [Azurite emulator](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite)
-
-```
-azurite --inMemoryPersistence
-```
- 
 ## links
 - Azure Functions
   - https://learn.microsoft.com/en-us/azure/azure-functions/functions-custom-handlers
@@ -138,7 +123,48 @@ azurite --inMemoryPersistence
 - MapStaticAssets — https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files
 - EU Data Boundary, non regional servicel — https://learn.microsoft.com/en-us/privacy/eudb/eu-data-boundary-configure-azure-nonregional-services
 
+## Known Limitations
 
-## Azure Resource providers
-- Microsoft.Storage
-- Microsoft.Web
+
+### 304s
+
+The Functions host Kestrel cannot forward 304 responses from the custom handler
+```
+[2026-07-30T20:38:32.629Z] Executed 'Functions.http-proxy' (Succeeded, Id=a0298a0c-f7cb-4796-82fc-fad0fe7c34c2, Duration=3ms)
+[2026-07-30T20:38:32.630Z] An unhandled host error has occurred.
+[2026-07-30T20:38:32.630Z] Microsoft.AspNetCore.Server.Kestrel.Core: Writing to the response body is invalid for responses with status code 304.
+```
+this is not user facing in the browser and can be mitigatedby disabling caching headers in the custom handler.
+
+The Functions host will then always return 200 OK with the file content.
+
+```csharp
+app.Use((context, next) => {
+    
+    context.Request.Headers.Remove("If-None-Match");
+    context.Request.Headers.Remove("If-Modified-Since");
+    return next();
+});
+app.UseDefaultFiles(new DefaultFilesOptions { DefaultFileNames = { "index.html" } });
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Remove("ETag");
+        ctx.Context.Response.Headers.Remove("Last-Modified");
+    }
+});
+```
+
+### Local execution and `Unhealthy` events
+
+To avoid warnings like 
+```JSON
+[Tag=''] Process reporting unhealthy: Unhealthy. Health check entries are {"azure.functions.web_host.lifecycle":{"status":"Healthy","description":null},"azure.functions.script_host.lifecycle":{"status":"Healthy","description":null},"azure.functions.webjobs.storage":{"status":"Unhealthy","description":"A timeout occurred while running check."}}
+```
+
+start the [Azurite emulator](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite)
+
+```
+azurite --inMemoryPersistence
+```
