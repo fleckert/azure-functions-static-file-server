@@ -1,4 +1,3 @@
-
 on:
   workflow_dispatch:
   push:
@@ -8,50 +7,70 @@ on:
     branches:
     - main
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
-  job:
+  test-build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
 
     - run: dotnet build StaticFilesHandler/StaticFilesHandler.csproj --configuration Release
 
+  test-local-hosting:
+    needs: [ test-build ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+
     - run: |
-        dotnet publish StaticFilesHandler/StaticFilesHandler.csproj \
-            --configuration   Release                               \
-            --runtime         'linux-x64'                           \
-            --self-contained  true                                  \
-            --output          dist                                  \
-            --property:DebugSymbols=false                           \
-            --property:DebugType=None                               \
-            --property:InvariantGlobalization=true                  \
-            --property:OutputType=Exe                               \
-            --property:PublishSingleFile=true                       \
-            --property:PublishTrimmed=true
+        ./scripts/appBuild.sh                          \
+          StaticFilesHandler/StaticFilesHandler.csproj \
+          dist
 
     - run: sudo apt-get install -y azure-functions-core-tools-4
 
     - run: func start &
 
+    - run: ./scripts/appCheck.sh "http://localhost:7071/"
+
+  test-azure-hosting:
+    needs: [ test-local-hosting ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+
+    - uses: azure/login@v3
+      with:
+        tenant-id      : ${{ secrets.AZURE_TENANT_ID       }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id      : ${{ secrets.AZURE_CLIENT_ID       }}
+
+    - run: sudo apt-get install -y azure-functions-core-tools-4
+
     - run: |
-        for i in {1..30}; do
-            HTTP=$(curl -s -o index.html -w "%{http_code}" http://localhost:7071/)
-            if [ "$HTTP" = "200" ]; then
-                break
-            fi
-            echo "Waiting for Functions host to start... (last status: $HTTP)"
-            sleep 2
-        done
+        ./scripts/deploy.sh                    \
+          ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+          azure-functions-static-file-server   \
+          sttcflsrvr${{ github.run_id }}${{ github.run_attempt }}
 
-        [ "$HTTP" = "200" ] || { echo "Expected HTTP 200, got $HTTP"; exit 1; }
+  cleanup-azure-hosting:
+    needs: [ test-azure-hosting ]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
 
-        grep -q "azure-functions-static-file-server" index.html || { echo "Unexpected index.html content"; exit 1; }
+    - uses: azure/login@v3
+      with:
+        tenant-id      : ${{ secrets.AZURE_TENANT_ID       }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id      : ${{ secrets.AZURE_CLIENT_ID       }}
 
-        echo ''
-        echo '------------------------------------------------------------'
-        echo "index.html content:"
-        echo '------------------------------------------------------------'
-        echo ''
-        cat index.html
-        echo ''
-        echo '------------------------------------------------------------'
+    - run: |
+        ./scripts/infraTearDown.sh             \
+          ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+          azure-functions-static-file-server   \
+          sttcflsrvr${{ github.run_id }}${{ github.run_attempt }}
