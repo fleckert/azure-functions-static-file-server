@@ -4,3 +4,4 @@ scripts
 local.settings.json
 StaticFilesHandler
 readme.md
+Makefile
